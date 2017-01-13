@@ -36,17 +36,17 @@ type Volume struct {
     LastMtime      time.Time    `json:"lastMtime"`
     LastCtime      time.Time    `json:"lastCtime"`
     LastBtime      time.Time    `json:"lastBtime"`
-    LastAtimeSince string       `json:"lastAtimeSince"`
-    LastMtimeSince string       `json:"lastMtimeSince"`
-    LastCtimeSince string       `json:"lastCtimeSince"`
-    LastBtimeSince string       `json:"lastBtimeSince"`
+    LastAtimeSince int          `json:"lastAtimeSince"`
+    LastMtimeSince int          `json:"lastMtimeSince"`
+    LastCtimeSince int          `json:"lastCtimeSince"`
+    LastBtimeSince int          `json:"lastBtimeSince"`
 }
 
 type Output struct{}
 
 // function to round seconds (be aware this is not a correct rounding)
-func LastTimeSinceInSeconds(lastTime time.Time) string {
-    return fmt.Sprintf("%.0f", time.Since(lastTime).Seconds())
+func LastTimeSinceInSeconds(lastTime time.Time) int {
+    return int(time.Since(lastTime).Seconds())
 }
 
 // function fieldSet for json outputs selection
