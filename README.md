@@ -19,3 +19,11 @@ example:
 ``` bash
 docker run --rm -e OUTPUT_FILE_INFOS=true -v $myvolume:**/volume** msutter/docker_volume_info
 ```
+
+# Build
+
+You can use the centurylink/golang-builder to build this utility
+
+``` bash
+docker run --rm -v $(pwd):/src centurylink/golang-builder
+```
