@@ -14,35 +14,21 @@ import (
 
 const MandatoryMountPoint string = "/volume"
 
-type FileInfos struct {
-    Path    string      // path of the file
-    Name    string      // base name of the file
-    Size    int64       // length in bytes for regular files; system-dependent for others
-    Mode    os.FileMode // file mode bits
-    ModTime time.Time   // modification time
-    IsDir   bool        // abbreviation for Mode().IsDir()
-    Sys     interface{} // underlying data source (can return nil)
-
-    Atime time.Time
-    Mtime time.Time
-    Ctime time.Time
-    Btime time.Time
+type TimeInfo struct {
+    Path      string    `json:"path"`
+    FileName  string    `json:"fileName"`
+    Time      time.Time `json:"time"`
+    TimeSince int       `json:"since"`
 }
 
 type Volume struct {
-    IsEmpty        bool         `json:"isEmpty"`
-    FilesInfos     []*FileInfos `json:"fileInfos"`
-    LastAtime      time.Time    `json:"lastAtime"`
-    LastMtime      time.Time    `json:"lastMtime"`
-    LastCtime      time.Time    `json:"lastCtime"`
-    LastBtime      time.Time    `json:"lastBtime"`
-    LastAtimeSince int          `json:"lastAtimeSince"`
-    LastMtimeSince int          `json:"lastMtimeSince"`
-    LastCtimeSince int          `json:"lastCtimeSince"`
-    LastBtimeSince int          `json:"lastBtimeSince"`
+    MountPoint string   `json:"mountPoint"`
+    IsEmpty    bool     `json:"isEmpty"`
+    LastAccess TimeInfo `json:"lastAccess"`
+    LastModify TimeInfo `json:"lastModify"`
+    LastChange TimeInfo `json:"lastChange"`
+    LastBirth  TimeInfo `json:"lastBirth"`
 }
-
-type Output struct{}
 
 // function to round seconds (be aware this is not a correct rounding)
 func LastTimeSinceInSeconds(lastTime time.Time) int {
@@ -92,7 +78,10 @@ func main() {
 
     // check if mounted or files within volume
     volEmpty, _ := IsEmpty(MandatoryMountPoint)
-    vol := Volume{IsEmpty: volEmpty}
+    vol := Volume{
+        MountPoint: MandatoryMountPoint,
+        IsEmpty:    volEmpty,
+    }
 
     err := filepath.Walk(MandatoryMountPoint, func(path string, info os.FileInfo, err error) error {
 
@@ -111,64 +100,58 @@ func main() {
         }
 
         aTime := t.AccessTime()
-        if aTime.After(vol.LastAtime) {
-            vol.LastAtime = aTime
-        }
-
-        mTime := t.ModTime()
-        if mTime.After(vol.LastMtime) {
-            vol.LastMtime = mTime
-        }
-
-        cTime := t.ChangeTime()
-        if cTime.After(vol.LastCtime) {
-            vol.LastCtime = cTime
-        }
-
-        fileInfos := &FileInfos{
-            Path:  path,
-            Name:  info.Name(),
-            Size:  info.Size(),
-            Mode:  info.Mode(),
-            IsDir: info.IsDir(),
-            Sys:   info.Sys(),
-            Atime: aTime,
-            Mtime: mTime,
-            Ctime: cTime,
-        }
-
-        if t.HasBirthTime() {
-            fileInfos.Btime = t.BirthTime()
-            if fileInfos.Btime.After(vol.LastBtime) {
-                vol.LastBtime = fileInfos.Btime
+        if aTime.After(vol.LastAccess.Time) {
+            vol.LastAccess = TimeInfo{
+                Path:      path,
+                FileName:  info.Name(),
+                Time:      aTime,
+                TimeSince: LastTimeSinceInSeconds(aTime),
             }
         }
 
-        vol.FilesInfos = append(vol.FilesInfos, fileInfos)
+        mTime := t.ModTime()
+        if mTime.After(vol.LastModify.Time) {
+            vol.LastModify = TimeInfo{
+                Path:      path,
+                FileName:  info.Name(),
+                Time:      mTime,
+                TimeSince: LastTimeSinceInSeconds(mTime),
+            }
+        }
+
+        cTime := t.ChangeTime()
+        if mTime.After(vol.LastChange.Time) {
+            vol.LastChange = TimeInfo{
+                Path:      path,
+                FileName:  info.Name(),
+                Time:      cTime,
+                TimeSince: LastTimeSinceInSeconds(cTime),
+            }
+        }
+
+        if t.HasBirthTime() {
+            btime := t.BirthTime()
+            if btime.After(vol.LastBirth.Time) {
+                vol.LastBirth = TimeInfo{
+                    Path:      path,
+                    FileName:  info.Name(),
+                    Time:      btime,
+                    TimeSince: LastTimeSinceInSeconds(btime),
+                }
+            }
+        }
+
         return err
 
     })
 
-    // Get time since now in seconds
-    vol.LastAtimeSince = LastTimeSinceInSeconds(vol.LastAtime)
-    vol.LastMtimeSince = LastTimeSinceInSeconds(vol.LastMtime)
-    vol.LastCtimeSince = LastTimeSinceInSeconds(vol.LastCtime)
-    vol.LastBtimeSince = LastTimeSinceInSeconds(vol.LastBtime)
-
     defaultOutputs := []string{
+        "mountPoint",
         "isEmpty",
-        "lastAtimeSince",
-        "lastMtimeSince",
-        "lastCtimeSince",
-        "lastBtimeSince",
-        "lastAtime",
-        "lastMtime",
-        "lastCtime",
-        "lastBtime",
-    }
-
-    if os.Getenv("OUTPUT_FILE_INFOS") == "true" {
-        defaultOutputs = append(defaultOutputs, "fileInfos")
+        "lastAccess",
+        "lastModify",
+        "lastChange",
+        "lastBirth",
     }
 
     outputJson, _ := json.MarshalIndent(vol.SelectFields(defaultOutputs...), "", "  ")
