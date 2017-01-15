@@ -83,81 +83,92 @@ func main() {
         IsEmpty:    volEmpty,
     }
 
-    err := filepath.Walk(MandatoryMountPoint, func(path string, info os.FileInfo, err error) error {
+    if volEmpty == false {
+        err := filepath.Walk(MandatoryMountPoint, func(path string, info os.FileInfo, err error) error {
 
-        if err != nil {
-            log.Print(err)
-            return nil
-        }
-
-        if path == MandatoryMountPoint { // Will skip walking of directory pictures and its contents.
-            return err
-        }
-
-        t, err := times.Stat(path)
-        if err != nil {
-            log.Fatal(err.Error())
-        }
-
-        aTime := t.AccessTime()
-        if aTime.After(vol.LastAccess.Time) {
-            vol.LastAccess = TimeInfo{
-                Path:      path,
-                FileName:  info.Name(),
-                Time:      aTime,
-                TimeSince: LastTimeSinceInSeconds(aTime),
+            if err != nil {
+                log.Print(err)
+                return nil
             }
-        }
 
-        mTime := t.ModTime()
-        if mTime.After(vol.LastModify.Time) {
-            vol.LastModify = TimeInfo{
-                Path:      path,
-                FileName:  info.Name(),
-                Time:      mTime,
-                TimeSince: LastTimeSinceInSeconds(mTime),
+            if path == MandatoryMountPoint { // Will skip walking of directory pictures and its contents.
+                return err
             }
-        }
 
-        cTime := t.ChangeTime()
-        if mTime.After(vol.LastChange.Time) {
-            vol.LastChange = TimeInfo{
-                Path:      path,
-                FileName:  info.Name(),
-                Time:      cTime,
-                TimeSince: LastTimeSinceInSeconds(cTime),
+            t, err := times.Stat(path)
+            if err != nil {
+                log.Fatal(err.Error())
             }
-        }
 
-        if t.HasBirthTime() {
-            btime := t.BirthTime()
-            if btime.After(vol.LastBirth.Time) {
-                vol.LastBirth = TimeInfo{
+            aTime := t.AccessTime()
+            if aTime.After(vol.LastAccess.Time) {
+                vol.LastAccess = TimeInfo{
                     Path:      path,
                     FileName:  info.Name(),
-                    Time:      btime,
-                    TimeSince: LastTimeSinceInSeconds(btime),
+                    Time:      aTime,
+                    TimeSince: LastTimeSinceInSeconds(aTime),
                 }
             }
+
+            mTime := t.ModTime()
+            if mTime.After(vol.LastModify.Time) {
+                vol.LastModify = TimeInfo{
+                    Path:      path,
+                    FileName:  info.Name(),
+                    Time:      mTime,
+                    TimeSince: LastTimeSinceInSeconds(mTime),
+                }
+            }
+
+            cTime := t.ChangeTime()
+            if mTime.After(vol.LastChange.Time) {
+                vol.LastChange = TimeInfo{
+                    Path:      path,
+                    FileName:  info.Name(),
+                    Time:      cTime,
+                    TimeSince: LastTimeSinceInSeconds(cTime),
+                }
+            }
+
+            if t.HasBirthTime() {
+                btime := t.BirthTime()
+                if btime.After(vol.LastBirth.Time) {
+                    vol.LastBirth = TimeInfo{
+                        Path:      path,
+                        FileName:  info.Name(),
+                        Time:      btime,
+                        TimeSince: LastTimeSinceInSeconds(btime),
+                    }
+                }
+            }
+
+            return err
+        })
+
+        if err != nil {
+            log.Fatal(err)
         }
-
-        return err
-
-    })
+    }
 
     defaultOutputs := []string{
         "mountPoint",
         "isEmpty",
-        "lastAccess",
-        "lastModify",
-        "lastChange",
-        "lastBirth",
+    }
+
+    if volEmpty == false {
+        defaultOutputs = append(defaultOutputs,
+            "lastAccess",
+            "lastModify",
+        )
+        all_times := os.Getenv("ALL_TIMES")
+        if all_times == "true" {
+            defaultOutputs = append(defaultOutputs,
+                "lastChange",
+                "lastBirth",
+            )
+        }
     }
 
     outputJson, _ := json.MarshalIndent(vol.SelectFields(defaultOutputs...), "", "  ")
     fmt.Println(string(outputJson))
-
-    if err != nil {
-        log.Fatal(err)
-    }
 }
