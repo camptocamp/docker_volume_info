@@ -10,7 +10,7 @@ The docker run command must be used with the target volume mounted as /volume in
 
 example:
 ``` bash
-docker run --rm -v $myvolume:**/volume** msutter/volume_info
+docker run --rm -v $myvolume:/volume msutter/volume_info
 ```
 
 this will output something like:
