@@ -1,4 +1,4 @@
-package main // import "github.com/msutter/docker_volume_info"
+package main // import "github.com/camptocamp/docker_volume_info"
 
 import (
     "encoding/json"

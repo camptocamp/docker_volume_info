@@ -10,7 +10,7 @@ The docker run command must be used with the target volume mounted as /volume in
 
 example:
 ``` bash
-docker run --rm -v $myvolume:/volume msutter/volume_info
+docker run --rm -v $myvolume:/volume camptocamp/volume_info
 ```
 
 this will output something like:
@@ -38,14 +38,14 @@ Should you need to get unique values, you can use the 'jq' binary to filter the 
 
 ### Example 1: finding out the number of seconds since last access
 ``` bash
-docker run --rm -v $myvolume:/volume msutter/volume_info | jq .lastAccess.since
+docker run --rm -v $myvolume:/volume camptocamp/volume_info | jq .lastAccess.since
 ```
 
 will return the nuber of seconds since last access. Here it will be 547
 
 ### Example 2: finding out the time of the last modification
 ``` bash
-docker run --rm -v $myvolume:/volume msutter/volume_info | jq .lastModify.time
+docker run --rm -v $myvolume:/volume camptocamp/volume_info | jq .lastModify.time
 ```
 
 will return the date/time of the last modification. Here it will be 2017-01-14T16:52:20+01:00
@@ -55,7 +55,7 @@ Should you need also the ctime and btime, you can enable it with the ALL_TIMES e
 
 example:
 ``` bash
-docker run --rm -e ALL_TIMES=true -v $myvolume:/volume msutter/volume_info
+docker run --rm -e ALL_TIMES=true -v $myvolume:/volume camptocamp/volume_info
 ```
 
 this will output something like:
