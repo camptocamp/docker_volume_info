@@ -23,18 +23,6 @@ this will output something like:
     "time": "2017-01-14T16:52:53+01:00",
     "since": 547
   },
-  "lastBirth": {
-    "path": "/volume/test1",
-    "fileName": "test1",
-    "time": "2017-01-14T16:42:56+01:00",
-    "since": 1144
-  },
-  "lastChange": {
-    "path": "/volume/test",
-    "fileName": "test",
-    "time": "2017-01-14T16:52:20+01:00",
-    "since": 580
-  },
   "lastModify": {
     "path": "/volume/test",
     "fileName": "test",
@@ -61,6 +49,46 @@ docker run --rm -v $myvolume:/volume msutter/volume_info | jq .lastModify.time
 ```
 
 will return the date/time of the last modification. Here it will be 2017-01-14T16:52:20+01:00
+
+# Options
+Should you need also the ctime and btime, you can enable it with the ALL_TIMES environment variable.
+
+example:
+``` bash
+docker run --rm -e ALL_TIMES=true -v $myvolume:/volume msutter/volume_info
+```
+
+this will output something like:
+```json
+{
+  "isEmpty": false,
+  "lastAccess": {
+    "path": "/volume/test1",
+    "fileName": "test1",
+    "time": "2017-01-14T16:52:53+01:00",
+    "since": 547
+  },
+  "lastBirth": {
+    "path": "/volume/test1",
+    "fileName": "test1",
+    "time": "2017-01-14T16:42:56+01:00",
+    "since": 1144
+  },
+  "lastChange": {
+    "path": "/volume/test",
+    "fileName": "test",
+    "time": "2017-01-14T16:52:20+01:00",
+    "since": 580
+  },
+  "lastModify": {
+    "path": "/volume/test",
+    "fileName": "test",
+    "time": "2017-01-14T16:52:20+01:00",
+    "since": 580
+  },
+  "mountPoint": "/volume"
+}
+```
 
 # Build
 
